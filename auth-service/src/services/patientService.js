@@ -3,11 +3,12 @@ const bcrypt    = require('bcryptjs');
 const crypto    = require('crypto');
 
 class PatientService {
+
+  // Crear paciente
   static async createPatient(data, consultorio_id) {
     try {
       await query('START TRANSACTION');
 
-      /* Correo duplicado */
       const [dup] = await query('SELECT 1 FROM usuario WHERE email = ?', [data.email]);
       if (dup) throw new Error('El correo ya está registrado');
 
@@ -50,6 +51,7 @@ class PatientService {
     }
   }
 
+  // Listar pacientes
   static async listPatients(consultorio_id) {
     try {
       const rows = await query(
@@ -72,6 +74,7 @@ class PatientService {
     }
   }
 
+  // Actualizar pacientes
   static async updatePatient(usuario_id, data, consultorio_id) {
     try {
       const [pac] = await query(
@@ -112,6 +115,33 @@ class PatientService {
       return { usuario_id };
     } catch (err) {
       console.error('Error en PatientService.updatePatient:', err);
+      throw err;
+    }
+  }
+
+  // Buscar paciente por id
+  static async getPatientById(usuario_id, consultorio_id) {
+    try {
+      const [pac] = await query(
+        `SELECT
+           usuario_id, nombre, apellidos, email, telefono,
+           fecha_nacimiento, genero, pais_origen, direccion,
+           notas, alergias, profesion, numero_identificacion,
+           nombre_contacto_emergencia, telefono_contacto_emergencia,
+           created_at, updated_at
+         FROM   usuario u
+         JOIN   rol r USING (rol_id)
+         WHERE  u.usuario_id = ?
+           AND  u.consultorio_id = ?
+           AND  r.nombre_rol = 'Paciente'`,
+        [usuario_id, consultorio_id]
+      );
+
+      if (!pac) throw new Error('Paciente no encontrado');
+
+      return pac;
+    } catch (err) {
+      console.error('Error en PatientService.getPatientById:', err);
       throw err;
     }
   }

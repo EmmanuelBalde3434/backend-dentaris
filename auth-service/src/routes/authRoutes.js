@@ -8,22 +8,24 @@ const {
   patientUpdateValidator
 } = require('../middlewares/validators');
 
-const { verifyToken }    = require('../middlewares/authMiddleware');
-const { login }          = require('../controllers/authController');
-const { registerClinic } = require('../controllers/registerController');
+const { verifyToken }      = require('../middlewares/authMiddleware');
+const { login }            = require('../controllers/authController');
+const { registerClinic }   = require('../controllers/registerController');
 const {
   createPatient,
   listPatients,
+  getPatient,
   updatePatient
 } = require('../controllers/patientController');
 
-/* ------- auth ------- */
+// auth
 router.post('/login',    loginValidator,          login);
 router.post('/register', registerClinicValidator, registerClinic);
 
-/* ------- pacientes ------- */
-router.post('/patients', verifyToken, patientValidator, createPatient);
-router.get ('/patients', verifyToken,               listPatients);
-router.put('/patients/:id', verifyToken, patientUpdateValidator, updatePatient);
+// paciente
+router.post('/patients',      verifyToken, patientValidator,       createPatient);
+router.get ('/patients',      verifyToken,                        listPatients);
+router.get ('/patients/:id',  verifyToken,                        getPatient);
+router.put ('/patients/:id',  verifyToken, patientUpdateValidator, updatePatient);
 
 module.exports = router;
