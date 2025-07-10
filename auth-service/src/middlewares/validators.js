@@ -69,3 +69,28 @@ exports.patientValidator = [
     next();
   }
 ];
+
+//Validacion de edicion de pacientes
+exports.patientUpdateValidator = [
+  body('nombre').optional().isLength({ min: 2 }).withMessage('Nombre muy corto'),
+  body('apellidos').optional().isLength({ min: 2 }),
+  body('email').optional().isEmail().withMessage('Correo inválido').normalizeEmail(),
+  body('telefono').optional(),
+  body('fecha_nacimiento').optional().isISO8601(),
+  body('genero').optional().isIn(['M','F','O']),
+  body('pais_origen').optional(),
+  body('direccion').optional(),
+  body('notas').optional(),
+  body('alergias').optional(),
+  body('profesion').optional(),
+  body('numero_identificacion').optional(),
+  body('nombre_contacto_emergencia').optional(),
+  body('telefono_contacto_emergencia').optional(),
+  (req,res,next)=>{
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+      return res.status(400).json({success:false,errors:errors.array()});
+    }
+    next();
+  }
+];

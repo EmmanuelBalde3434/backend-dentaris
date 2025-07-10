@@ -21,3 +21,16 @@ exports.listPatients = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
+//PUT / editar pacientes
+exports.updatePatient = async (req, res) => {
+  try {
+    const { consultorio_id } = req.user;
+    const { id } = req.params;               
+    const result = await PatientService.updatePatient(id, req.body, consultorio_id);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};

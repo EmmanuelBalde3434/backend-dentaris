@@ -71,6 +71,50 @@ class PatientService {
       throw err;
     }
   }
+
+  static async updatePatient(usuario_id, data, consultorio_id) {
+    try {
+      const [pac] = await query(
+        `SELECT u.usuario_id
+         FROM   usuario u
+         JOIN   rol r USING(rol_id)
+         WHERE  u.usuario_id = ? AND u.consultorio_id = ? AND r.nombre_rol = 'Paciente'`,
+        [usuario_id, consultorio_id]
+      );
+      if (!pac) throw new Error('Paciente no encontrado en este consultorio');
+
+      const camposPermitidos = [
+        'nombre','apellidos','email','telefono','fecha_nacimiento','genero',
+        'pais_origen','direccion','notas','alergias','profesion',
+        'numero_identificacion','nombre_contacto_emergencia',
+        'telefono_contacto_emergencia'
+      ];
+
+      const setParts = [];
+      const values   = [];
+
+      camposPermitidos.forEach(campo => {
+        if (data[campo] !== undefined) {
+          setParts.push(`${campo} = ?`);
+          values.push(data[campo]);
+        }
+      });
+
+      if (setParts.length === 0) throw new Error('Sin campos para actualizar');
+
+      values.push(usuario_id);
+
+      await query(
+        `UPDATE usuario SET ${setParts.join(', ')} WHERE usuario_id = ?`,
+        values
+      );
+
+      return { usuario_id };
+    } catch (err) {
+      console.error('Error en PatientService.updatePatient:', err);
+      throw err;
+    }
+  }
 }
 
 module.exports = PatientService;
