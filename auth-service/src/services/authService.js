@@ -1,3 +1,4 @@
+//services/authService.js
 const { query } = require('./database'); 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
