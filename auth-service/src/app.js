@@ -1,3 +1,4 @@
+require('dotenv').config();          
 const express = require('express');
 const cors = require('cors');
 const { loginLimiter } = require('./middlewares/rateLimiter');
@@ -16,7 +17,7 @@ app.get('/', (req, res) => {
   res.send('Auth Service (Dentaris) - MySQL Directo');
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.APP_PORT || 3001;   
 app.listen(PORT, () => {
   console.log(`Auth service corriendo en http://localhost:${PORT}`);
 });

@@ -1,4 +1,3 @@
-// middlewares/rateLimiter.js
 const rateLimit = require('express-rate-limit');
 
 exports.loginLimiter = rateLimit({
