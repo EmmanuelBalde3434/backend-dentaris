@@ -94,3 +94,40 @@ exports.patientUpdateValidator = [
     next();
   }
 ];
+
+//Validacion crear dentista
+exports.doctorValidator = [
+  body('rol').trim().equals('Dentista')
+              .withMessage('El rol debe ser exactamente "Dentista"'),
+  body('nombre').isLength({ min: 2 }).withMessage('Nombre requerido'),
+  body('apellidos').isLength({ min: 2 }).withMessage('Apellidos requeridos'),
+  body('email').isEmail().withMessage('Correo inválido').normalizeEmail(),
+  body('telefono').optional(),
+  body('cedula_profesional').isLength({ min: 5 })
+            .withMessage('Cédula profesional obligatoria'),
+  body('carrera').isLength({ min: 3 }).withMessage('Carrera obligatoria'),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    next();
+  }
+];
+
+// Validacion update dentista
+exports.doctorUpdateValidator = [
+  body('nombre').optional().isLength({ min: 2 }),
+  body('apellidos').optional().isLength({ min: 2 }),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('telefono').optional(),
+  body('cedula_profesional').optional(),
+  body('carrera').optional(),
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    next();
+  }
+];

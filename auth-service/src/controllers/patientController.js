@@ -43,3 +43,15 @@ exports.updatePatient = async (req, res) => {
     res.status(400).json({ success: false, error: e.message });
   }
 };
+
+//Eliminar paciente
+
+exports.deletePatient = async (req, res) => {
+  try {
+    const { consultorio_id } = req.user;
+    const out = await PatientService.deletePatient(req.params.id, consultorio_id);
+    res.json({ success: true, ...out });
+  } catch (e) {
+    res.status(404).json({ success: false, error: e.message });
+  }
+};

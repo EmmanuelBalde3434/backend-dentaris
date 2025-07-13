@@ -145,6 +145,28 @@ class PatientService {
       throw err;
     }
   }
+
+  static async deletePatient(usuario_id, consultorio_id) {
+    try {
+        const [pac] = await query(
+          `SELECT u.usuario_id
+          FROM   usuario u
+          JOIN   rol r USING (rol_id)
+          WHERE  u.usuario_id = ?
+            AND  u.consultorio_id = ?
+            AND  r.nombre_rol = 'Paciente'`,
+          [usuario_id, consultorio_id]
+        );
+        if (!pac) throw new Error('Paciente no encontrado en este consultorio');
+
+        await query('DELETE FROM usuario WHERE usuario_id = ?', [usuario_id]);
+
+        return { usuario_id };
+      } catch (err) {
+        console.error('Error en PatientService.deletePatient:', err);
+        throw err;
+      }
+  }
 }
 
 module.exports = PatientService;
