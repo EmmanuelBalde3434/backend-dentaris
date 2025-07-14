@@ -31,6 +31,10 @@ const {
   deleteDentist
 } = require('../controllers/dentistController');
 
+const { 
+  getConsultorio 
+} = require('../controllers/consultorioController');
+
 // Rutas auth
 router.post('/login',    loginValidator,          login);
 router.post('/register', registerClinicValidator, registerClinic);
@@ -48,5 +52,8 @@ router.get   ('/dentists',      verifyToken,                         listDentist
 router.get   ('/dentists/:id',  verifyToken,                         getDentist);
 router.put   ('/dentists/:id',  verifyToken, doctorUpdateValidator,  updateDentist);
 router.delete('/dentists/:id',  verifyToken,                         deleteDentist);
+
+// Rutas consultorio
+router.get('/consultorio', verifyToken, getConsultorio);
 
 module.exports = router;
