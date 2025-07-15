@@ -97,3 +97,34 @@ exports.getCitaDetalle = async (req, res) => {
   }
 };
 
+exports.getTodasCitasDetalle = async (req, res) => {
+  try {
+    const rows = await CitaService.getTodasCitasConUsuarios();
+
+    const data = rows.map((c) => ({
+      cita_id: c.cita_id,
+      fecha: c.fecha,
+      hora: c.hora,
+      estado: c.estado,
+      paciente: {
+        usuario_id: c.paciente_id,
+        nombre: c.paciente_nombre,
+        email: c.paciente_email,
+        rol_id: c.paciente_rol
+      },
+      dentista: {
+        usuario_id: c.dentista_id,
+        nombre: c.dentista_nombre,
+        email: c.dentista_email,
+        rol_id: c.dentista_rol
+      }
+    }));
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('❌ Error al obtener citas con detalle:', error);
+    res.status(500).json({ success: false, error: 'Error del servidor' });
+  }
+};
+
+

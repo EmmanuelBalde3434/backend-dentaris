@@ -56,6 +56,31 @@ class CitaService {
     return result;
   }
 
+  static async getTodasCitasConUsuarios() {
+    const sql = `
+    SELECT
+      c.cita_id, c.fecha, c.hora, c.estado,
+      
+      p.usuario_id AS paciente_id,
+      p.nombre     AS paciente_nombre,
+      p.email      AS paciente_email,
+      p.rol_id     AS paciente_rol,
+      
+      d.usuario_id AS dentista_id,
+      d.nombre     AS dentista_nombre,
+      d.email      AS dentista_email,
+      d.rol_id     AS dentista_rol
+
+    FROM cita c
+    JOIN auth_db.usuario p ON c.paciente_id = p.usuario_id
+    JOIN auth_db.usuario d ON c.dentista_id = d.usuario_id
+    ORDER BY c.fecha, c.hora
+  `;
+
+    return await query(sql);
+  }
+
+
 }
 
 module.exports = CitaService;
