@@ -30,6 +30,32 @@ class CitaService {
     const result = await query(sql, [id]);
     return result.affectedRows > 0;
   }
+
+  static async getCitaConUsuarios(id) {
+    const sql = `
+    SELECT
+      c.cita_id, c.fecha, c.hora, c.estado,
+      
+      p.usuario_id AS paciente_id,
+      p.nombre     AS paciente_nombre,
+      p.email      AS paciente_email,
+      p.rol_id     AS paciente_rol,
+      
+      d.usuario_id AS dentista_id,
+      d.nombre     AS dentista_nombre,
+      d.email      AS dentista_email,
+      d.rol_id     AS dentista_rol
+
+    FROM cita c
+    JOIN auth_db.usuario p ON c.paciente_id = p.usuario_id
+    JOIN auth_db.usuario d ON c.dentista_id = d.usuario_id
+    WHERE c.cita_id = ?
+  `;
+
+    const [result] = await query(sql, [id]);
+    return result;
+  }
+
 }
 
 module.exports = CitaService;

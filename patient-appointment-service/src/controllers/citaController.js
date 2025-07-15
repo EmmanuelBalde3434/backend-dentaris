@@ -61,3 +61,39 @@ exports.deleteCita = async (req, res) => {
     res.status(500).json({ success: false, error: 'Error al eliminar cita' });
   }
 };
+
+exports.getCitaDetalle = async (req, res) => {
+  try {
+    const detalle = await CitaService.getCitaConUsuarios(req.params.id);
+
+    if (!detalle) {
+      return res.status(404).json({ success: false, error: 'Cita no encontrada' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        cita_id: detalle.cita_id,
+        fecha: detalle.fecha,
+        hora: detalle.hora,
+        estado: detalle.estado,
+        paciente: {
+          usuario_id: detalle.paciente_id,
+          nombre: detalle.paciente_nombre,
+          email: detalle.paciente_email,
+          rol_id: detalle.paciente_rol
+        },
+        dentista: {
+          usuario_id: detalle.dentista_id,
+          nombre: detalle.dentista_nombre,
+          email: detalle.dentista_email,
+          rol_id: detalle.dentista_rol
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener cita con detalle:', error);
+    res.status(500).json({ success: false, error: 'Error del servidor' });
+  }
+};
+
