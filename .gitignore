@@ -1,0 +1,5 @@
+# Ignorar node_modules en todos los servicios
+**/node_modules/
+
+# Ignorar archivos de entorno
+*.env
