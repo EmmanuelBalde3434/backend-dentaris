@@ -1,0 +1,3 @@
+ALTER TABLE cita ADD COLUMN motivo VARCHAR(255) AFTER estado;
+
+ALTER TABLE cita MODIFY estado ENUM('Agendada','Realizada','Cancelada','No asistido') NOT NULL DEFAULT 'Agendada';
