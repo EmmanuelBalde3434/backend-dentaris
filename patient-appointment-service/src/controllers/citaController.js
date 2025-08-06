@@ -26,8 +26,8 @@ exports.getCitaById = async (req, res) => {
 
 exports.createCita = async (req, res) => {
   try {
-    const { paciente_id, dentista_id, fecha, hora, estado } = req.body;
-    const nueva = await CitaService.create({ paciente_id, dentista_id, fecha, hora, estado });
+    const { paciente_id, dentista_id, fecha, hora, estado, motivo } = req.body;
+    const nueva = await CitaService.create({ paciente_id, dentista_id, fecha, hora, estado, motivo });
     res.status(201).json({ success: true, data: nueva });
   } catch (error) {
     console.error('Error al crear cita:', error);
@@ -37,8 +37,8 @@ exports.createCita = async (req, res) => {
 
 exports.updateCita = async (req, res) => {
   try {
-    const { fecha, hora, estado } = req.body;
-    const actualizada = await CitaService.update(req.params.id, { fecha, hora, estado });
+    const { fecha, hora, estado, motivo } = req.body;
+    const actualizada = await CitaService.update(req.params.id, { fecha, hora, estado, motivo });
     if (!actualizada) {
       return res.status(404).json({ success: false, error: 'Cita no encontrada' });
     }
@@ -65,7 +65,6 @@ exports.deleteCita = async (req, res) => {
 exports.getCitaDetalle = async (req, res) => {
   try {
     const detalle = await CitaService.getCitaConUsuarios(req.params.id);
-
     if (!detalle) {
       return res.status(404).json({ success: false, error: 'Cita no encontrada' });
     }
@@ -77,6 +76,7 @@ exports.getCitaDetalle = async (req, res) => {
         fecha: detalle.fecha,
         hora: detalle.hora,
         estado: detalle.estado,
+        motivo: detalle.motivo,
         paciente: {
           usuario_id: detalle.paciente_id,
           nombre: detalle.paciente_nombre,
@@ -106,6 +106,7 @@ exports.getTodasCitasDetalle = async (req, res) => {
       fecha: c.fecha,
       hora: c.hora,
       estado: c.estado,
+      motivo: c.motivo,
       paciente: {
         usuario_id: c.paciente_id,
         nombre: c.paciente_nombre,
@@ -126,5 +127,3 @@ exports.getTodasCitasDetalle = async (req, res) => {
     res.status(500).json({ success: false, error: 'Error del servidor' });
   }
 };
-
-
