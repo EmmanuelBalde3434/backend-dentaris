@@ -1,6 +1,5 @@
 const RegisterService = require('../../src/services/registerService');
 
-/* ------------- mocks ------------- */
 jest.mock('../../src/services/database', () => ({ query: jest.fn() }));
 jest.mock('bcryptjs', () => ({ hash: jest.fn() }));
 jest.mock('jsonwebtoken', () => ({ sign: jest.fn() }));
@@ -21,15 +20,14 @@ describe('RegisterService.registerClinicAdmin', () => {
     password: 'MiPass123'
   };
 
-  /* ----------- caso éxito ----------- */
   it('crea clínica y admin correctamente', async () => {
     db.query
-      .mockResolvedValueOnce({})                 // START
-      .mockResolvedValueOnce([])                 // dup
-      .mockResolvedValueOnce([{ rol_id: 1 }])    // rol
-      .mockResolvedValueOnce({ insertId: 10 })   // INSERT consultorio
-      .mockResolvedValueOnce({ insertId: 20 })   // INSERT usuario
-      .mockResolvedValueOnce({});                // COMMIT
+      .mockResolvedValueOnce({})                
+      .mockResolvedValueOnce([])               
+      .mockResolvedValueOnce([{ rol_id: 1 }])    
+      .mockResolvedValueOnce({ insertId: 10 })   
+      .mockResolvedValueOnce({ insertId: 20 })  
+      .mockResolvedValueOnce({});                
 
     bcrypt.hash.mockResolvedValue('hashedPass');
     jwt.sign.mockReturnValue('signed-token');
@@ -50,25 +48,23 @@ describe('RegisterService.registerClinicAdmin', () => {
     );
   });
 
-  /* -------- correo duplicado -------- */
   it('falla si el correo ya existe', async () => {
     db.query
-      .mockResolvedValueOnce({})   // START
-      .mockResolvedValueOnce([{}]) // dup encontrado
-      .mockResolvedValueOnce({});  // ROLLBACK
+      .mockResolvedValueOnce({})   
+      .mockResolvedValueOnce([{}])
+      .mockResolvedValueOnce({});  
 
     await expect(
       RegisterService.registerClinicAdmin(base)
     ).rejects.toThrow('El correo ya está registrado');
   });
 
-  /* ------ rol Administrador falta ---- */
   it('falla si el rol Administrador no existe', async () => {
     db.query
-      .mockResolvedValueOnce({})   // START
-      .mockResolvedValueOnce([])   // dup ok
-      .mockResolvedValueOnce([])   // rol vacío
-      .mockResolvedValueOnce({});  // ROLLBACK
+      .mockResolvedValueOnce({})  
+      .mockResolvedValueOnce([])  
+      .mockResolvedValueOnce([]) 
+      .mockResolvedValueOnce({});  
 
     await expect(
       RegisterService.registerClinicAdmin(base)

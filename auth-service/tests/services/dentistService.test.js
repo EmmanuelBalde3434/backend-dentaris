@@ -1,6 +1,5 @@
 const DentistService = require('../../src/services/dentistService');
 
-/* ------------ mocks globales ------------ */
 jest.mock('../../src/services/database', () => ({ query: jest.fn() }));
 jest.mock('bcryptjs', () => ({ hash: jest.fn() }));
 jest.mock('crypto', () => ({ randomBytes: jest.fn() }));
@@ -12,7 +11,6 @@ const crypto  = require('crypto');
 describe('DentistService', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  /* ========== createDentist ========== */
   describe('createDentist', () => {
     const baseData = {
       rol: 'Dentista',
@@ -25,15 +23,14 @@ describe('DentistService', () => {
     };
 
     it('crea dentista cuando todo es válido', async () => {
-      /* secuencia de queries esperada: START → dup → rol → INSERT → COMMIT */
       db.query
-        .mockResolvedValueOnce({})               // START TRANSACTION
-        .mockResolvedValueOnce([])               // dup comprobación
-        .mockResolvedValueOnce([{ rol_id: 2 }])  // SELECT rol
-        .mockResolvedValueOnce({ insertId: 55 }) // INSERT
-        .mockResolvedValueOnce({});              // COMMIT
+        .mockResolvedValueOnce({})              
+        .mockResolvedValueOnce([])               
+        .mockResolvedValueOnce([{ rol_id: 2 }])  
+        .mockResolvedValueOnce({ insertId: 55 }) 
+        .mockResolvedValueOnce({});              
 
-      crypto.randomBytes.mockReturnValue(Buffer.from('123456789'));  // buffer fijo
+      crypto.randomBytes.mockReturnValue(Buffer.from('123456789')); 
       bcrypt.hash.mockResolvedValue('hashedPass');
 
       const res = await DentistService.createDentist(baseData, 3);
@@ -46,8 +43,8 @@ describe('DentistService', () => {
 
     it('lanza error si el correo ya existe', async () => {
       db.query
-        .mockResolvedValueOnce({})   // START
-        .mockResolvedValueOnce([{}]); // dup encontrado
+        .mockResolvedValueOnce({})   
+        .mockResolvedValueOnce([{}]); 
 
       await expect(
         DentistService.createDentist(baseData, 3)
@@ -57,12 +54,11 @@ describe('DentistService', () => {
     });
   });
 
-  /* ========== deleteDentist ========== */
   describe('deleteDentist', () => {
     it('elimina dentista existente', async () => {
       db.query
-        .mockResolvedValueOnce([{}]) // existe
-        .mockResolvedValueOnce({});  // DELETE
+        .mockResolvedValueOnce([{}]) 
+        .mockResolvedValueOnce({}); 
 
       const res = await DentistService.deleteDentist(42, 3);
 
@@ -75,7 +71,7 @@ describe('DentistService', () => {
     });
 
     it('lanza error si el dentista no pertenece al consultorio', async () => {
-      db.query.mockResolvedValueOnce([]); // no encontrado
+      db.query.mockResolvedValueOnce([]); 
 
       await expect(
         DentistService.deleteDentist(99, 3)

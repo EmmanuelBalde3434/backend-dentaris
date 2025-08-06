@@ -1,6 +1,5 @@
 const PatientService = require('../../src/services/patientService');
 
-/* ---------- mocks ---------- */
 jest.mock('../../src/services/database', () => ({ query: jest.fn() }));
 jest.mock('bcryptjs', () => ({ hash: jest.fn() }));
 jest.mock('crypto', () => ({ randomBytes: jest.fn() }));
@@ -12,7 +11,6 @@ const crypto  = require('crypto');
 describe('PatientService', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  /* ========== createPatient ========== */
   describe('createPatient', () => {
     const data = {
       rol: 'Paciente',
@@ -26,11 +24,11 @@ describe('PatientService', () => {
 
     it('crea paciente cuando todo es válido', async () => {
       db.query
-        .mockResolvedValueOnce({})               // START
-        .mockResolvedValueOnce([])               // dup
-        .mockResolvedValueOnce([{ rol_id: 3 }])  // rol
-        .mockResolvedValueOnce({ insertId: 77 }) // INSERT
-        .mockResolvedValueOnce({});              // COMMIT
+        .mockResolvedValueOnce({})             
+        .mockResolvedValueOnce([])              
+        .mockResolvedValueOnce([{ rol_id: 3 }]) 
+        .mockResolvedValueOnce({ insertId: 77 })
+        .mockResolvedValueOnce({});             
 
       crypto.randomBytes.mockReturnValue(Buffer.from('abcdefghi'));
       bcrypt.hash.mockResolvedValue('hashedPass');
@@ -44,8 +42,8 @@ describe('PatientService', () => {
 
     it('lanza error si el correo ya existe', async () => {
       db.query
-        .mockResolvedValueOnce({})   // START
-        .mockResolvedValueOnce([{}]); // dup encontrado
+        .mockResolvedValueOnce({})   
+        .mockResolvedValueOnce([{}]); 
 
       await expect(
         PatientService.createPatient(data, 4)
@@ -53,7 +51,6 @@ describe('PatientService', () => {
     });
   });
 
-  /* ========== updatePatient ========== */
   describe('updatePatient', () => {
     it('lanza error si no hay campos permitidos', async () => {
       db.query.mockResolvedValueOnce([{}]); // paciente existe
@@ -64,10 +61,9 @@ describe('PatientService', () => {
     });
   });
 
-  /* ========== deletePatient ========== */
   describe('deletePatient', () => {
     it('falla cuando el paciente no pertenece al consultorio', async () => {
-      db.query.mockResolvedValueOnce([]); // no encontrado
+      db.query.mockResolvedValueOnce([]); 
 
       await expect(
         PatientService.deletePatient(99, 4)
