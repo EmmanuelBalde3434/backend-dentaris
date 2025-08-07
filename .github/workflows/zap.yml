@@ -1,0 +1,55 @@
+name: ZAP Baseline Scan
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 0'    
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Start auth-service
+      working-directory: auth-service
+      run: |
+        npm ci
+        node src/app.js &
+        echo $! > $GITHUB_WORKSPACE/pid.txt     # guarda el PID
+        sleep 5                                # espera a que escuche
+
+    - name: Fix perms for ZAP and runner
+      run: sudo chmod -R a+rw "$GITHUB_WORKSPACE"
+
+    - name: ZAP Baseline
+      id: zap
+      uses: zaproxy/action-baseline@v0.12.0
+      continue-on-error: true           
+      with:
+        target: 'http://localhost:3001/'
+        fail_action: false
+        allow_issue_writing: false      
+        artifact_name: internal-dummy   
+
+    - name: Upload ZAP reports
+      if: always()                      
+      uses: actions/upload-artifact@v4
+      with:
+        name: zap_report_${{ github.run_number }}
+        retention-days: 7               
+        path: |
+          report_html.html
+          report_md.md
+          report_json.json
+
+    - name: Stop auth-service
+      if: always()
+      run: kill "$(cat $GITHUB_WORKSPACE/pid.txt)"

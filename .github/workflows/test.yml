@@ -1,10 +1,6 @@
-name: Tests
+name: test
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
   test:
@@ -12,28 +8,40 @@ jobs:
 
     strategy:
       matrix:
-        service:
-          - auth-service
-          - catalog-service
-          - patient-appointment-service
-          - billing-service
+        service: [auth-service, catalog-service, patient-appointment-service, billing-service]
+      fail-fast: false          
 
     defaults:
       run:
-        working-directory: ${{ matrix.service }}
+        shell: bash
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Setup Node 22.x
+    - name: Setup Node.js 22.x
       uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
-        cache-dependency-path: ${{ matrix.service }}/package-lock.json
 
-    - name: Install deps
+    - name: Install dependencies
+      working-directory: ${{ matrix.service }}
       run: npm ci
 
+    - name: Security audit (npm)
+      id: audit
+      working-directory: ${{ matrix.service }}
+      run: |
+        npm audit --audit-level=moderate --json > audit-report.json
+        cat audit-report.json | jq '.metadata.vulnerabilities'
+    
+    - name: Upload audit report
+      if: always()                           
+      uses: actions/upload-artifact@v4
+      with:
+        name: audit-${{ matrix.service }}
+        path: ${{ matrix.service }}/audit-report.json
+
     - name: Run tests
-      run: npm test
+      working-directory: ${{ matrix.service }}
+      run: npm test -- --runInBand
