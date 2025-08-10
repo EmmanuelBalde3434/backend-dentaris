@@ -20,13 +20,13 @@ describe('RegisterService.registerClinicAdmin', () => {
     password: 'MiPass123'
   };
 
-  it('crea clínica y admin correctamente', async () => {
+  it('crea clínica y admin correctamente (usuario con estado Activo)', async () => {
     db.query
-      .mockResolvedValueOnce({})                
-      .mockResolvedValueOnce([])               
+      .mockResolvedValueOnce({})                 
+      .mockResolvedValueOnce([])                 
       .mockResolvedValueOnce([{ rol_id: 1 }])    
       .mockResolvedValueOnce({ insertId: 10 })   
-      .mockResolvedValueOnce({ insertId: 20 })  
+      .mockResolvedValueOnce({ insertId: 20 })   
       .mockResolvedValueOnce({});                
 
     bcrypt.hash.mockResolvedValue('hashedPass');
@@ -46,13 +46,19 @@ describe('RegisterService.registerClinicAdmin', () => {
       'test_secret',
       { expiresIn: '8h' }
     );
+
+    const insertUsuarioCall = db.query.mock.calls[4]; 
+    expect(insertUsuarioCall[0]).toContain('INSERT INTO usuario');
+    const params = insertUsuarioCall[1];
+    expect(Array.isArray(params)).toBe(true);
+    expect(params[params.length - 1]).toBe('Activo');
   });
 
   it('falla si el correo ya existe', async () => {
     db.query
       .mockResolvedValueOnce({})   
-      .mockResolvedValueOnce([{}])
-      .mockResolvedValueOnce({});  
+      .mockResolvedValueOnce([{}]) 
+      .mockResolvedValueOnce({});   
 
     await expect(
       RegisterService.registerClinicAdmin(base)
@@ -61,10 +67,10 @@ describe('RegisterService.registerClinicAdmin', () => {
 
   it('falla si el rol Administrador no existe', async () => {
     db.query
-      .mockResolvedValueOnce({})  
+      .mockResolvedValueOnce({})   
       .mockResolvedValueOnce([])  
-      .mockResolvedValueOnce([]) 
-      .mockResolvedValueOnce({});  
+      .mockResolvedValueOnce([])   
+      .mockResolvedValueOnce({});
 
     await expect(
       RegisterService.registerClinicAdmin(base)

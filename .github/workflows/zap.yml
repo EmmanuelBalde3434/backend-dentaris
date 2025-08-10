@@ -5,11 +5,28 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '0 4 * * 0'    
+    - cron: '0 4 * * 0'  
 
 jobs:
-  zap:
+  zap-matrix:
     runs-on: ubuntu-latest
+    strategy:
+      
+      max-parallel: 1
+      matrix:
+        include:
+          - service: auth-service
+            dir: auth-service
+            port: 3001
+          - service: billing-service
+            dir: billing-service
+            port: 3002
+          - service: catalog-service
+            dir: catalog-service
+            port: 3003
+          - service: patient-appointment-service
+            dir: patient-appointment-service
+            port: 3004
 
     steps:
     - uses: actions/checkout@v4
@@ -18,38 +35,65 @@ jobs:
       with:
         node-version: '22'
 
-    - name: Start auth-service
-      working-directory: auth-service
+    - name: Start ${{ matrix.service }}
+      working-directory: ${{ matrix.dir }}
       run: |
+        set -euo pipefail
         npm ci
-        node src/app.js &
-        echo $! > $GITHUB_WORKSPACE/pid.txt     # guarda el PID
-        sleep 5                                # espera a que escuche
+        # Si tu app respeta PORT, esta línea fija el puerto de la matriz.
+        # Si no lo respeta, ajusta los puertos de la matriz a los reales del servicio
+        PORT=${{ matrix.port }} node src/app.js > "$GITHUB_WORKSPACE/${{ matrix.service }}.log" 2>&1 &
+        echo $! > "$GITHUB_WORKSPACE/pid_${{ matrix.service }}.txt"
 
-    - name: Fix perms for ZAP and runner
+    - name: Wait for ${{ matrix.service }} to be ready
+      run: |
+        set -e
+        for i in {1..60}; do
+          if curl -sSf "http://localhost:${{ matrix.port }}/" > /dev/null; then
+            echo "Service ready on :${{ matrix.port }}"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "Service did not start on :${{ matrix.port }}. Last log lines:"
+        tail -n 200 "$GITHUB_WORKSPACE/${{ matrix.service }}.log" || true
+        exit 1
+
+    - name: Make workspace writable for ZAP
       run: sudo chmod -R a+rw "$GITHUB_WORKSPACE"
 
-    - name: ZAP Baseline
-      id: zap
-      uses: zaproxy/action-baseline@v0.12.0
-      continue-on-error: true           
-      with:
-        target: 'http://localhost:3001/'
-        fail_action: false
-        allow_issue_writing: false      
-        artifact_name: internal-dummy   
+    - name: Run ZAP Baseline (${{ matrix.service }})
+      run: |
+        set -e
+        docker pull ghcr.io/zaproxy/zaproxy:stable -q
+        # Genera reportes con nombre del servicio
+        docker run --rm \
+          -v "$GITHUB_WORKSPACE:/zap/wrk/:rw" \
+          --network=host \
+          ghcr.io/zaproxy/zaproxy:stable \
+          zap-baseline.py \
+            -t "http://localhost:${{ matrix.port }}/" \
+            -J "report_${{ matrix.service }}.json" \
+            -w "report_${{ matrix.service }}.md" \
+            -r "report_${{ matrix.service }}.html" || true
+        # Si por cualquier razón no se crearon, falla para ver logs
+        test -s "report_${{ matrix.service }}.html" || (echo "Missing HTML report"; exit 2)
 
-    - name: Upload ZAP reports
-      if: always()                      
+    - name: Upload ZAP reports (${{ matrix.service }})
       uses: actions/upload-artifact@v4
       with:
-        name: zap_report_${{ github.run_number }}
-        retention-days: 7               
+        name: zap_${{ matrix.service }}_${{ github.run_number }}
+        retention-days: 7
         path: |
-          report_html.html
-          report_md.md
-          report_json.json
+          report_${{ matrix.service }}.html
+          report_${{ matrix.service }}.md
+          report_${{ matrix.service }}.json
 
-    - name: Stop auth-service
+    - name: Stop ${{ matrix.service }}
       if: always()
-      run: kill "$(cat $GITHUB_WORKSPACE/pid.txt)"
+      run: |
+        if [ -f "$GITHUB_WORKSPACE/pid_${{ matrix.service }}.txt" ]; then
+          kill "$(cat "$GITHUB_WORKSPACE/pid_${{ matrix.service }}.txt")" || true
+        fi
+        echo "==== Tail of ${{ matrix.service }} log ===="
+        tail -n 50 "$GITHUB_WORKSPACE/${{ matrix.service }}.log" || true

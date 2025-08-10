@@ -14,7 +14,7 @@ class PatientService {
 
       const [row] = await query(
         'SELECT rol_id FROM rol WHERE nombre_rol = ?',
-        [data.rol]                                         
+        [data.rol]
       );
       if (!row) throw new Error('Rol "Paciente" no existe');
       const rol_id = row.rol_id;
@@ -26,7 +26,7 @@ class PatientService {
         'rol_id','consultorio_id','nombre','apellidos','email','telefono',
         'fecha_nacimiento','genero','pais_origen','direccion','notas','alergias',
         'profesion','numero_identificacion','nombre_contacto_emergencia',
-        'telefono_contacto_emergencia','password_hash','must_reset_password'
+        'telefono_contacto_emergencia','password_hash','must_reset_password','estado'
       ];
       const vals = [
         rol_id, consultorio_id,
@@ -34,7 +34,7 @@ class PatientService {
         data.fecha_nacimiento, data.genero, data.pais_origen, data.direccion,
         data.notas, data.alergias, data.profesion, data.numero_identificacion,
         data.nombre_contacto_emergencia, data.telefono_contacto_emergencia,
-        pwdHash, true
+        pwdHash, true, 'Activo'
       ];
       const qs = cols.map(() => '?').join(',');
       const { insertId } = await query(
@@ -67,7 +67,7 @@ class PatientService {
            AND  u.consultorio_id = ?`,
         [consultorio_id]
       );
-      return rows;                             
+      return rows;
     } catch (err) {
       console.error('Error en PatientService.listPatients:', err);
       throw err;
@@ -146,26 +146,27 @@ class PatientService {
     }
   }
 
+  //“Eliminar” paciente (marcar Baja)
   static async deletePatient(usuario_id, consultorio_id) {
     try {
-        const [pac] = await query(
-          `SELECT u.usuario_id
-          FROM   usuario u
-          JOIN   rol r USING (rol_id)
-          WHERE  u.usuario_id = ?
-            AND  u.consultorio_id = ?
-            AND  r.nombre_rol = 'Paciente'`,
-          [usuario_id, consultorio_id]
-        );
-        if (!pac) throw new Error('Paciente no encontrado en este consultorio');
+      const [pac] = await query(
+        `SELECT u.usuario_id
+         FROM   usuario u
+         JOIN   rol r USING (rol_id)
+         WHERE  u.usuario_id = ?
+           AND  u.consultorio_id = ?
+           AND  r.nombre_rol = 'Paciente'`,
+        [usuario_id, consultorio_id]
+      );
+      if (!pac) throw new Error('Paciente no encontrado en este consultorio');
 
-        await query('DELETE FROM usuario WHERE usuario_id = ?', [usuario_id]);
+      await query(`UPDATE usuario SET estado = 'Baja' WHERE usuario_id = ?`, [usuario_id]);
 
-        return { usuario_id };
-      } catch (err) {
-        console.error('Error en PatientService.deletePatient:', err);
-        throw err;
-      }
+      return { usuario_id };
+    } catch (err) {
+      console.error('Error en PatientService.deletePatient:', err);
+      throw err;
+    }
   }
 }
 

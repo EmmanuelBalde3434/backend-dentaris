@@ -23,13 +23,13 @@ class DentistService {
       const cols = [
         'rol_id','consultorio_id','nombre','apellidos','email','telefono',
         'cedula_profesional','carrera',
-        'password_hash','must_reset_password'
+        'password_hash','must_reset_password','estado'
       ];
       const vals = [
         rol_id, consultorio_id,
         data.nombre, data.apellidos, data.email, data.telefono,
         data.cedula_profesional, data.carrera,
-        pwdHash, true
+        pwdHash, true, 'Activo'
       ];
       const qs = cols.map(() => '?').join(',');
       const { insertId } = await query(
@@ -44,7 +44,7 @@ class DentistService {
     }
   }
 
-  /* ---------------- LISTAR DOCTORES -------------- */
+  //Listado de doctores
   static async listDentists(consultorio_id) {
     return query(
       `SELECT usuario_id,nombre,apellidos,email,telefono,
@@ -55,7 +55,7 @@ class DentistService {
     );
   }
 
-  //Obetner dentista por id
+  //Obtener dentista por id
   static async getDentistById(usuario_id, consultorio_id) {
     const [doc] = await query(
       `SELECT usuario_id,nombre,apellidos,email,telefono,
@@ -90,7 +90,7 @@ class DentistService {
     return { usuario_id };
   }
 
-  //Eliminar dentista
+  //“Eliminar” dentista (marcar Baja)
   static async deleteDentist(usuario_id, consultorio_id) {
     const [doc] = await query(
       `SELECT 1 FROM usuario u JOIN rol r USING(rol_id)
@@ -98,7 +98,9 @@ class DentistService {
       [usuario_id, consultorio_id]
     );
     if (!doc) throw new Error('Dentista no encontrado en este consultorio');
-    await query('DELETE FROM usuario WHERE usuario_id = ?', [usuario_id]);
+
+    await query(`UPDATE usuario SET estado = 'Baja' WHERE usuario_id = ?`, [usuario_id]);
+
     return { usuario_id };
   }
 }

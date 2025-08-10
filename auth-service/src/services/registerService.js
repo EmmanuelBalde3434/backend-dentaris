@@ -1,4 +1,3 @@
-// src/services/registerService.js
 const { query } = require('./database');
 const bcrypt    = require('bcryptjs');
 const jwt       = require('jsonwebtoken');
@@ -27,11 +26,12 @@ class RegisterService {
       );
 
       const password_hash = await bcrypt.hash(password, 10);
+
       const { insertId: usuario_id } = await query(
         `INSERT INTO usuario
-         (rol_id, consultorio_id, email, telefono, password_hash, must_reset_password)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [rol_id, consultorio_id, email, telefono, password_hash, false]
+         (rol_id, consultorio_id, email, telefono, password_hash, must_reset_password, estado)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [rol_id, consultorio_id, email, telefono, password_hash, false, 'Activo']
       );
 
       await query('COMMIT');
