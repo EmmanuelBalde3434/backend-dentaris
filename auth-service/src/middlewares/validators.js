@@ -86,6 +86,7 @@ exports.patientUpdateValidator = [
   body('numero_identificacion').optional(),
   body('nombre_contacto_emergencia').optional(),
   body('telefono_contacto_emergencia').optional(),
+  body('estado').optional().isIn(['Activo','Baja']).withMessage('Estado debe ser "Activo" o "Baja"'),
   (req,res,next)=>{
     const errors = validationResult(req);
     if(!errors.isEmpty()){
@@ -123,6 +124,7 @@ exports.doctorUpdateValidator = [
   body('telefono').optional(),
   body('cedula_profesional').optional(),
   body('carrera').optional(),
+  body('estado').optional().isIn(['Activo','Baja']).withMessage('Estado debe ser "Activo" o "Baja"'),
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

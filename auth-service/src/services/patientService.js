@@ -79,9 +79,9 @@ class PatientService {
     try {
       const [pac] = await query(
         `SELECT u.usuario_id
-         FROM   usuario u
-         JOIN   rol r USING(rol_id)
-         WHERE  u.usuario_id = ? AND u.consultorio_id = ? AND r.nombre_rol = 'Paciente'`,
+        FROM   usuario u
+        JOIN   rol r USING(rol_id)
+        WHERE  u.usuario_id = ? AND u.consultorio_id = ? AND r.nombre_rol = 'Paciente'`,
         [usuario_id, consultorio_id]
       );
       if (!pac) throw new Error('Paciente no encontrado en este consultorio');
@@ -90,25 +90,29 @@ class PatientService {
         'nombre','apellidos','email','telefono','fecha_nacimiento','genero',
         'pais_origen','direccion','notas','alergias','profesion',
         'numero_identificacion','nombre_contacto_emergencia',
-        'telefono_contacto_emergencia'
+        'telefono_contacto_emergencia','estado' 
       ];
+
+      if ('estado' in data && !['Activo','Baja'].includes(data.estado)) {
+        throw new Error('Valor de estado inválido');
+      }
 
       const setParts = [];
       const values   = [];
 
-      camposPermitidos.forEach(campo => {
+      for (const campo of camposPermitidos) {
         if (data[campo] !== undefined) {
           setParts.push(`${campo} = ?`);
           values.push(data[campo]);
         }
-      });
+      }
 
       if (setParts.length === 0) throw new Error('Sin campos para actualizar');
 
       values.push(usuario_id);
 
       await query(
-        `UPDATE usuario SET ${setParts.join(', ')} WHERE usuario_id = ?`,
+        `UPDATE usuario SET ${setParts.join(', ')} WHERE usuario_id = ?`, 
         values
       );
 

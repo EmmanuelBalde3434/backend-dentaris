@@ -77,13 +77,17 @@ class DentistService {
       [usuario_id, consultorio_id]
     );
     if (!doc) throw new Error('Dentista no encontrado en este consultorio');
+    
+    if ('estado' in data && !['Activo','Baja'].includes(data.estado)) {
+    throw new Error('Valor de estado inválido');
+  }
 
     const permitidos = ['nombre','apellidos','email','telefono',
-                        'cedula_profesional','carrera'];
+                        'cedula_profesional','carrera', 'estado'];
     const set = [], vals = [];
-    permitidos.forEach(c => {
+    for (const c of permitidos) {
       if (data[c] !== undefined) { set.push(`${c} = ?`); vals.push(data[c]); }
-    });
+    }
     if (!set.length) throw new Error('Sin campos para actualizar');
     vals.push(usuario_id);
     await query(`UPDATE usuario SET ${set.join(', ')} WHERE usuario_id = ?`, vals);
